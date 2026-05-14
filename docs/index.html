@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube → 블로그 생성기</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -14,17 +15,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      padding: 2rem 1rem;
     }
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      max-width: 680px;
+    .wrap {
+      max-width: 760px;
       width: 100%;
-      padding: 3rem 2.5rem;
+    }
+    header {
       text-align: center;
+      padding: 2.5rem 0 2rem;
     }
     .badge {
       display: inline-block;
@@ -34,171 +33,374 @@
       border-radius: 999px;
       font-size: 0.78rem;
       font-weight: 600;
-      letter-spacing: 0.05em;
       padding: 0.3rem 0.9rem;
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.2rem;
     }
     h1 {
       font-size: 2rem;
       font-weight: 700;
-      margin-bottom: 1rem;
-      line-height: 1.3;
+      margin-bottom: 0.6rem;
     }
     h1 span { color: #ff4b4b; }
-    .desc {
-      color: #aaa;
-      font-size: 1rem;
-      line-height: 1.7;
-      margin-bottom: 2rem;
+    .subtitle { color: #888; font-size: 0.95rem; }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
     }
-    .features {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-bottom: 2.5rem;
-      text-align: left;
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 0.4rem;
     }
-    .feature {
-      background: #222;
-      border-radius: 10px;
-      padding: 0.85rem 1rem;
-      font-size: 0.88rem;
-      color: #ccc;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .feature span { font-size: 1.1rem; }
-    .buttons { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.7rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.92rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.8; }
-    .btn-primary { background: #ff4b4b; color: #fff; }
-    .btn-secondary { background: #2a2a2a; color: #e8e8e8; border: 1px solid #3a3a3a; }
-    .stack {
-      margin-top: 2.5rem;
-      padding-top: 2rem;
-      border-top: 1px solid #2a2a2a;
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .tag {
-      font-size: 0.78rem;
-      color: #666;
-      background: #222;
-      border-radius: 6px;
-      padding: 0.3rem 0.7rem;
-    }
-    .url-box {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-    .url-input {
-      flex: 1;
-      background: #222;
-      border: 1px solid #3a3a3a;
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
       border-radius: 8px;
       color: #e8e8e8;
       font-size: 0.92rem;
-      padding: 0.75rem 1rem;
+      padding: 0.7rem 1rem;
       outline: none;
       transition: border-color 0.15s;
+      margin-bottom: 0.9rem;
     }
-    .url-input::placeholder { color: #555; }
-    .url-input:focus { border-color: #ff4b4b; }
-    .url-btn {
+    input:focus { border-color: #ff4b4b; }
+    input::placeholder { color: #444; }
+
+    .key-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .key-row input { margin-bottom: 0; flex: 1; }
+    .key-link {
+      font-size: 0.78rem;
+      color: #ff4b4b;
+      text-decoration: none;
+      white-space: nowrap;
+      padding-bottom: 0.75rem;
+    }
+    .key-link:hover { text-decoration: underline; }
+
+    .btn-generate {
+      width: 100%;
       background: #ff4b4b;
       border: none;
       border-radius: 8px;
       color: #fff;
       cursor: pointer;
-      font-size: 0.92rem;
-      font-weight: 600;
-      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.85rem;
       transition: opacity 0.15s;
-      white-space: nowrap;
+      margin-top: 0.4rem;
     }
-    .url-btn:hover { opacity: 0.85; }
-    .notice {
-      background: #1e1e2e;
-      border: 1px solid #3a3a55;
+    .btn-generate:hover { opacity: 0.85; }
+    .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .result-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 1.75rem;
+      display: none;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .result-header h2 { font-size: 1rem; color: #aaa; }
+    .btn-copy {
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      transition: background 0.15s;
+    }
+    .btn-copy:hover { background: #333; }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 0.5rem;
+    }
+    .tab {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+    }
+    .tab.active { background: #2a2a2a; color: #e8e8e8; }
+
+    #preview {
+      line-height: 1.8;
+      font-size: 0.95rem;
+      color: #ddd;
+    }
+    #preview h1, #preview h2, #preview h3 {
+      color: #fff;
+      margin: 1.2rem 0 0.5rem;
+    }
+    #preview p { margin-bottom: 0.8rem; }
+    #preview hr { border-color: #2a2a2a; margin: 1rem 0; }
+    #preview strong { color: #fff; }
+    #preview a { color: #ff4b4b; }
+    #preview code {
+      background: #222;
+      border-radius: 4px;
+      font-size: 0.85em;
+      padding: 0.1em 0.4em;
+    }
+
+    #raw {
+      display: none;
+      background: #111;
       border-radius: 8px;
-      color: #888;
+      color: #ccc;
+      font-family: monospace;
       font-size: 0.82rem;
-      padding: 0.6rem 1rem;
-      margin-bottom: 2rem;
-      text-align: left;
+      line-height: 1.6;
+      padding: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .notice a { color: #ff4b4b; text-decoration: none; }
+
+    .cursor::after {
+      content: '▌';
+      color: #ff4b4b;
+      animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .alert {
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+      padding: 0.7rem 1rem;
+    }
+    .alert-error { background: #2a1010; border: 1px solid #5a2020; color: #f88; }
+    .alert-info  { background: #101a2a; border: 1px solid #205a8a; color: #8af; }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+    .feature {
+      background: #111;
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.82rem;
+      color: #999;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
+<div class="wrap">
+  <header>
     <div class="badge">📝 AI 블로그 생성기</div>
     <h1>YouTube → <span>한국어 블로그</span> 자동 생성</h1>
-    <p class="desc">
-      YouTube URL만 입력하면 영상 자막을 분석해<br />
-      Google Gemini AI가 한국어 블로그 글을 자동으로 작성합니다.
-    </p>
-    <div class="url-box">
-      <input class="url-input" type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." />
-      <button class="url-btn" onclick="handleGenerate()">블로그 생성</button>
+    <p class="subtitle">YouTube URL만 입력하면 Gemini AI가 한국어 블로그 글을 작성합니다</p>
+  </header>
+
+  <div class="card">
+    <div id="alertBox"></div>
+
+    <label>Gemini API 키</label>
+    <div class="key-row">
+      <input type="password" id="apiKey" placeholder="AIza..." />
+      <a class="key-link" href="https://aistudio.google.com/apikey" target="_blank">키 발급 →</a>
     </div>
-    <div class="notice" id="notice" style="display:none;"></div>
+
+    <label>YouTube URL</label>
+    <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." />
+
+    <button class="btn-generate" id="generateBtn" onclick="generate()">블로그 생성</button>
+
     <div class="features">
-      <div class="feature"><span>🌏</span> 영어 영상도 한국어로 변환</div>
-      <div class="feature"><span>⚡</span> 실시간 스트리밍 출력</div>
-      <div class="feature"><span>🔗</span> 출처 자동 포함</div>
-      <div class="feature"><span>📥</span> Markdown 다운로드</div>
-    </div>
-    <div class="buttons">
-      <a class="btn btn-primary" href="https://github.com/psh0135-arch/youtube-blog-generator" target="_blank">
-        ★ GitHub 바로가기
-      </a>
-      <a class="btn btn-secondary" href="https://github.com/psh0135-arch/youtube-blog-generator#readme" target="_blank">
-        📖 사용 방법
-      </a>
-    </div>
-    <div class="stack">
-      <span class="tag">Streamlit</span>
-      <span class="tag">Google Gemini 2.0 Flash</span>
-      <span class="tag">youtube-transcript-api</span>
-      <span class="tag">Python 3.12</span>
+      <div class="feature">🌏 영어 영상도 한국어로 변환</div>
+      <div class="feature">⚡ 실시간 스트리밍 출력</div>
+      <div class="feature">🔗 출처 자동 포함</div>
+      <div class="feature">📥 Markdown 복사</div>
     </div>
   </div>
-  <script>
-    function handleGenerate() {
-      const val = document.getElementById('urlInput').value.trim();
-      const notice = document.getElementById('notice');
-      if (!val) {
-        notice.style.display = 'block';
-        notice.innerHTML = '⚠️ YouTube URL을 입력해주세요.';
-        return;
-      }
-      const isYoutube = /youtube\.com\/watch\?v=|youtu\.be\//.test(val);
-      if (!isYoutube) {
-        notice.style.display = 'block';
-        notice.innerHTML = '⚠️ 올바른 YouTube URL을 입력해주세요.';
-        return;
-      }
-      notice.style.display = 'block';
-      notice.innerHTML = '🖥️ 이 페이지는 소개 페이지입니다. 실제 블로그 생성은 로컬에서 <code>streamlit run app.py</code> 실행 후 사용하거나, <a href="https://github.com/psh0135-arch/youtube-blog-generator" target="_blank">GitHub</a>에서 설치해주세요.';
-    }
-    document.getElementById('urlInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') handleGenerate();
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <h2>생성된 블로그 글</h2>
+      <button class="btn-copy" onclick="copyMarkdown()">📋 복사</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('preview', this)">미리보기</button>
+      <button class="tab" onclick="switchTab('raw', this)">Markdown 원문</button>
+    </div>
+    <div id="preview"></div>
+    <pre id="raw"></pre>
+  </div>
+</div>
+
+<script>
+  let blogText = '';
+
+  function extractVideoId(url) {
+    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function setAlert(msg, type = 'error') {
+    document.getElementById('alertBox').innerHTML = msg
+      ? `<div class="alert alert-${type}">${msg}</div>`
+      : '';
+  }
+
+  function switchTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('preview').style.display = tab === 'preview' ? 'block' : 'none';
+    document.getElementById('raw').style.display = tab === 'raw' ? 'block' : 'none';
+  }
+
+  function copyMarkdown() {
+    navigator.clipboard.writeText(blogText).then(() => {
+      const btn = document.querySelector('.btn-copy');
+      btn.textContent = '✅ 복사됨';
+      setTimeout(() => btn.textContent = '📋 복사', 2000);
     });
-  </script>
+  }
+
+  function buildPrompt(videoUrl) {
+    return `다음 YouTube 영상 내용을 바탕으로 한국어 블로그 글을 작성해주세요.
+
+출처 URL: ${videoUrl}
+
+블로그 글 작성 규칙:
+1. 독자의 흥미를 끄는 매력적인 제목 작성
+2. 도입부 → 소제목 3~5개로 구성된 본문 → 결론 구조
+3. 자연스럽고 읽기 쉬운 한국어 문체
+4. 핵심 내용과 인사이트를 중심으로 정리
+5. 글 마지막에 반드시 아래 형식의 출처 포함:
+
+---
+**출처**
+- URL: ${videoUrl}
+- 작성일: ${new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'})}
+
+Markdown 형식으로 작성해주세요.`;
+  }
+
+  async function generate() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const url = document.getElementById('urlInput').value.trim();
+    const btn = document.getElementById('generateBtn');
+
+    setAlert('');
+
+    if (!apiKey) { setAlert('Gemini API 키를 입력해주세요.'); return; }
+    if (!url) { setAlert('YouTube URL을 입력해주세요.'); return; }
+
+    const videoId = extractVideoId(url);
+    if (!videoId) { setAlert('올바른 YouTube URL을 입력해주세요.'); return; }
+
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    btn.disabled = true;
+    btn.textContent = '생성 중...';
+    blogText = '';
+
+    const resultCard = document.getElementById('resultCard');
+    const preview = document.getElementById('preview');
+    const raw = document.getElementById('raw');
+    resultCard.style.display = 'block';
+    preview.innerHTML = '<span class="cursor"></span>';
+    raw.textContent = '';
+
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+      const body = {
+        contents: [{
+          parts: [
+            { file_data: { file_uri: videoUrl, mime_type: 'video/mp4' } },
+            { text: buildPrompt(videoUrl) }
+          ]
+        }]
+      };
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        const msg = err?.error?.message || resp.statusText;
+        if (resp.status === 429) throw new Error('API 사용 한도 초과. 잠시 후 다시 시도하거나 새 API 키를 발급받으세요.');
+        if (resp.status === 400) throw new Error(`요청 오류: ${msg}`);
+        if (resp.status === 401 || resp.status === 403) throw new Error('API 키가 올바르지 않습니다.');
+        throw new Error(msg);
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+          try {
+            const data = JSON.parse(jsonStr);
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text) {
+              blogText += text;
+              preview.innerHTML = marked.parse(blogText) + '<span class="cursor"></span>';
+              raw.textContent = blogText;
+              preview.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          } catch (_) {}
+        }
+      }
+
+      preview.innerHTML = marked.parse(blogText);
+      raw.textContent = blogText;
+
+    } catch (e) {
+      setAlert(`오류: ${e.message}`);
+      resultCard.style.display = blogText ? 'block' : 'none';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '블로그 생성';
+    }
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') generate();
+  });
+</script>
 </body>
 </html>
