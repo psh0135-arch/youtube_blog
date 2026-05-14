@@ -100,6 +100,48 @@
       border-radius: 6px;
       padding: 0.3rem 0.7rem;
     }
+    .url-box {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .url-input {
+      flex: 1;
+      background: #222;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 0.92rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .url-input::placeholder { color: #555; }
+    .url-input:focus { border-color: #ff4b4b; }
+    .url-btn {
+      background: #ff4b4b;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 0.75rem 1.25rem;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .url-btn:hover { opacity: 0.85; }
+    .notice {
+      background: #1e1e2e;
+      border: 1px solid #3a3a55;
+      border-radius: 8px;
+      color: #888;
+      font-size: 0.82rem;
+      padding: 0.6rem 1rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .notice a { color: #ff4b4b; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -110,6 +152,11 @@
       YouTube URL만 입력하면 영상 자막을 분석해<br />
       Google Gemini AI가 한국어 블로그 글을 자동으로 작성합니다.
     </p>
+    <div class="url-box">
+      <input class="url-input" type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." />
+      <button class="url-btn" onclick="handleGenerate()">블로그 생성</button>
+    </div>
+    <div class="notice" id="notice" style="display:none;"></div>
     <div class="features">
       <div class="feature"><span>🌏</span> 영어 영상도 한국어로 변환</div>
       <div class="feature"><span>⚡</span> 실시간 스트리밍 출력</div>
@@ -131,5 +178,27 @@
       <span class="tag">Python 3.12</span>
     </div>
   </div>
+  <script>
+    function handleGenerate() {
+      const val = document.getElementById('urlInput').value.trim();
+      const notice = document.getElementById('notice');
+      if (!val) {
+        notice.style.display = 'block';
+        notice.innerHTML = '⚠️ YouTube URL을 입력해주세요.';
+        return;
+      }
+      const isYoutube = /youtube\.com\/watch\?v=|youtu\.be\//.test(val);
+      if (!isYoutube) {
+        notice.style.display = 'block';
+        notice.innerHTML = '⚠️ 올바른 YouTube URL을 입력해주세요.';
+        return;
+      }
+      notice.style.display = 'block';
+      notice.innerHTML = '🖥️ 이 페이지는 소개 페이지입니다. 실제 블로그 생성은 로컬에서 <code>streamlit run app.py</code> 실행 후 사용하거나, <a href="https://github.com/psh0135-arch/youtube-blog-generator" target="_blank">GitHub</a>에서 설치해주세요.';
+    }
+    document.getElementById('urlInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleGenerate();
+    });
+  </script>
 </body>
 </html>
