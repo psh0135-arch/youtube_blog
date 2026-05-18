@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube → 블로그 생성기</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -338,7 +339,7 @@ Markdown 형식으로 작성해주세요.`;
     raw.textContent = '';
 
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse`;
 
       const body = {
         contents: [{
@@ -351,7 +352,7 @@ Markdown 형식으로 작성해주세요.`;
 
       const resp = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify(body)
       });
 
@@ -381,15 +382,16 @@ Markdown 형식으로 작성해주세요.`;
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             if (text) {
               blogText += text;
-              preview.innerHTML = marked.parse(blogText) + '<span class="cursor"></span>';
+              preview.innerHTML = DOMPurify.sanitize(marked.parse(blogText)) + '<span class="cursor"></span>';
               raw.textContent = blogText;
-              preview.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              const distFromBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+              if (distFromBottom < 200) window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
             }
           } catch (_) {}
         }
       }
 
-      preview.innerHTML = marked.parse(blogText);
+      preview.innerHTML = DOMPurify.sanitize(marked.parse(blogText));
       raw.textContent = blogText;
 
     } catch (e) {

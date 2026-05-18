@@ -33,16 +33,18 @@ def get_video_metadata(video_id: str) -> dict:
             f"?url=https://www.youtube.com/watch?v={video_id}&format=json"
         )
         resp = requests.get(oembed_url, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            return {
-                "title": data.get("title", "제목 없음"),
-                "channel": data.get("author_name", "채널 없음"),
-                "url": f"https://www.youtube.com/watch?v={video_id}",
-                "thumbnail": data.get("thumbnail_url", ""),
-            }
-    except Exception:
-        pass
+        resp.raise_for_status()
+        data = resp.json()
+        return {
+            "title": data.get("title", "제목 없음"),
+            "channel": data.get("author_name", "채널 없음"),
+            "url": f"https://www.youtube.com/watch?v={video_id}",
+            "thumbnail": data.get("thumbnail_url", ""),
+        }
+    except requests.exceptions.RequestException as e:
+        st.warning(f"영상 정보를 가져오지 못했습니다: {e}")
+    except (ValueError, KeyError):
+        st.warning("영상 정보 파싱에 실패했습니다.")
     return {
         "title": "제목 없음",
         "channel": "채널 없음",
