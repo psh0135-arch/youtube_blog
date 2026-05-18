@@ -263,14 +263,17 @@
   let blogText = '';
 
   function extractVideoId(url) {
-    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
     return m ? m[1] : null;
   }
 
   function setAlert(msg, type = 'error') {
-    document.getElementById('alertBox').innerHTML = msg
-      ? `<div class="alert alert-${type}">${msg}</div>`
-      : '';
+    const box = document.getElementById('alertBox');
+    if (!msg) { box.innerHTML = ''; return; }
+    const div = document.createElement('div');
+    div.className = `alert alert-${type}`;
+    div.textContent = msg;
+    box.replaceChildren(div);
   }
 
   function switchTab(tab, el) {
