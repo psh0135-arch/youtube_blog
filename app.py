@@ -111,7 +111,7 @@ def generate_blog_post(transcript: str, metadata: dict, lang: str, api_key: str)
     prompt = build_prompt(transcript, metadata, lang)
 
     for chunk in client.models.generate_content_stream(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
     ):
         if chunk.text:
